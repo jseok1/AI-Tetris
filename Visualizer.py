@@ -1,96 +1,86 @@
 import pygame
 
-from Tetris import Tetris
+DIMENSIONS = (300, 600)
+FPS = 60
 
-# screen dimensions
-WIDTH = 340
-HEIGHT = 680
-
-# RGB colour values
 WHITE = (255, 255, 255)
 GREY = (240, 240, 240)
 
-CYAN = (130, 215, 255)
-BLUE = (100, 170, 255)
-ORANGE = (255, 170, 70)
-YELLOW = (255, 220, 100)
-GREEN = (155, 255, 110)
-RED = (255, 100, 100)
-PURPLE = (170, 140, 255)
+COLOURS = {'I': (130, 215, 255),
+           'J': (100, 170, 255),
+           'L': (255, 170, 70),
+           'O': (255, 220, 100),
+           'S': (155, 255, 110),
+           'Z': (255, 100, 100),
+           'T': (170, 140, 255),
+           'X': (209, 243, 255)}
 
 
-def run_visualizer():
-    """Initialize and run this visualizer."""
-    pygame.init()
-    pygame.display.set_caption('Tetris')
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+class Visualizer:
 
-    game = Tetris()
+    def __init__(self, game):
+        self.game = game
 
-    event_loop(screen, game)
+    def run_game(self):
+        """Initialize and run this visualizer."""
+        pygame.init()
+        pygame.display.set_caption('Tetris')
+        screen = pygame.display.set_mode(DIMENSIONS)
+        self.game_loop(screen)
 
-
-def event_loop(screen, game):
-    """Respond to events and update the visualizer."""
-    falling_piece_event = pygame.USEREVENT + 1
-    pygame.time.set_timer(falling_piece_event, 800)
-    # pygame.key.set_repeat(100, 100)
-    is_running = True
-    while is_running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                is_running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    game.move_left()
-                elif event.key == pygame.K_RIGHT:
-                    game.move_right()
-                elif event.key == pygame.K_DOWN:
-                    game.move_down()
-                elif event.key == pygame.K_SPACE:
-                    game.drop_down()
-                elif event.key == pygame.K_x:
-                    game.rotate_clockwise()
-                elif event.key == pygame.K_z:
-                    game.rotate_counterclockwise()
-            elif event.type == falling_piece_event:
-                game.move_down()
-                if game.game_is_over:
+    def game_loop(self, screen):
+        """Respond to events and update the visualizer."""
+        clock = pygame.time.Clock()
+        is_running = True
+        while is_running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     is_running = False
-            draw(screen, game)
-            pygame.display.flip()
+                elif event.type == pygame.KEYDOWN:
+                    if self.game.game_state == 1:
+                        if event.key == pygame.K_LEFT:
+                            self.game.move_left()
+                        elif event.key == pygame.K_RIGHT:
+                            self.game.move_right()
+                        elif event.key == pygame.K_DOWN:
+                            self.game.move_down()
+                        if event.key == pygame.K_SPACE:
+                            self.game.drop_down()
+                        elif event.key == pygame.K_x:
+                            self.game.rotate_clockwise()
+                        elif event.key == pygame.K_z:
+                            self.game.rotate_counterclockwise()
+            self.game.update()
+            self.draw(screen)
+            if self.game.game_state == 0:
+                is_running = False
+            clock.tick(FPS)
+        pygame.quit()
 
+    def draw(self, screen):
+        screen.fill(WHITE)
+        width = DIMENSIONS[0] / 10
+        height = DIMENSIONS[1] / 20
 
-def draw(screen, game):
-    screen.fill(WHITE)  # clear screen
-    width = WIDTH / 10
-    height = HEIGHT / 20
-
-    for y in range(20):
-        line = pygame.Rect(0, y * height, WIDTH, 1)
-        pygame.draw.rect(screen, GREY, line)
-    for x in range(10):
-        line = pygame.Rect(x * width, 0, 1, HEIGHT)
-        pygame.draw.rect(screen, GREY, line)
-
-    for y in range(20):
+        for y in range(20):
+            line = pygame.Rect(0, y * height, DIMENSIONS[0], 1)
+            pygame.draw.rect(screen, GREY, line)
         for x in range(10):
-            block = pygame.Rect(x * width, y * height, width, height)
-            if game.board.board[y][x] == 'I':
-                pygame.draw.rect(screen, CYAN, block)
-            elif game.board.board[y][x] == 'J':
-                pygame.draw.rect(screen, BLUE, block)
-            elif game.board.board[y][x] == 'L':
-                pygame.draw.rect(screen, ORANGE, block)
-            elif game.board.board[y][x] == 'O':
-                pygame.draw.rect(screen, YELLOW, block)
-            elif game.board.board[y][x] == 'S':
-                pygame.draw.rect(screen, GREEN, block)
-            elif game.board.board[y][x] == 'Z':
-                pygame.draw.rect(screen, RED, block)
-            elif game.board.board[y][x] == 'T':
-                pygame.draw.rect(screen, PURPLE, block)
+            line = pygame.Rect(x * width, 0, 1, DIMENSIONS[1])
+            pygame.draw.rect(screen, GREY, line)
 
+        for y in range(20):
+            for x in range(10):
+                if self.game.grid.grid[y][x].isupper():
+                    block = pygame.Rect(x * width, y * height, width, height)
+                    colour = COLOURS[self.game.grid.grid[y][x]]
+                    pygame.draw.rect(screen, colour, block)
 
-if __name__ == '__main__':
-    run_visualizer()
+        if self.game.game_state == 1:
+            for y in range(4):
+                for x in range(4):
+                    if self.game.current_tetromino.shapes[self.game.current_tetromino.rotation][y][x] != '.':
+                        block = pygame.Rect((self.game.current_tetromino.x + x) * width, (self.game.current_tetromino.y + y) * height, width, height)
+                        colour = COLOURS[self.game.current_tetromino.shapes[self.game.current_tetromino.rotation][y][x]]
+                        pygame.draw.rect(screen, colour, block)
+        pygame.display.flip()

@@ -1,12 +1,83 @@
-from random import shuffle
+import random
 
-from I import I
-from J import J
-from L import L
-from O import O
-from S import S
-from T import T
-from Z import Z
+import Tetromino
+
+TETROMINOES = {'I': [['....',
+                      '....',
+                      'IIII',
+                      '....'],
+                     ['..I.',
+                      '..I.',
+                      '..I.',
+                      '..I.']],
+               'J': [['....',
+                      '.J..',
+                      '.JJJ',
+                      '....'],
+                     ['....',
+                      '..JJ',
+                      '..J.',
+                      '..J.'],
+                     ['....',
+                      '....',
+                      '.JJJ',
+                      '...J'],
+                     ['....',
+                      '..J.',
+                      '..J.',
+                      '.JJ.']],
+               'L': [['....',
+                      '...L',
+                      '.LLL',
+                      '....'],
+                     ['....',
+                      '..L.',
+                      '..L.',
+                      '..LL'],
+                     ['....',
+                      '....',
+                      '.LLL',
+                      '.L..'],
+                     ['....',
+                      '.LL.',
+                      '..L.',
+                      '..L.']],
+               'O': [['....',
+                      '.OO.',
+                      '.OO.',
+                      '....']],
+               'S': [['....',
+                      '..SS',
+                      '.SS.',
+                      '....'],
+                     ['....',
+                      '.S..',
+                      '.SS.',
+                      '..S.']],
+               'Z': [['....',
+                      '.ZZ.',
+                      '..ZZ',
+                      '....'],
+                     ['....',
+                      '..Z.',
+                      '.ZZ.',
+                      '.Z..']],
+               'T': [['....',
+                      '..T.',
+                      '.TTT',
+                      '....'],
+                     ['....',
+                      '..T.',
+                      '..TT',
+                      '..T.'],
+                     ['....',
+                      '....',
+                      '.TTT',
+                      '..T.'],
+                     ['....',
+                      '..T.',
+                      '.TT.',
+                      '..T.']]}
 
 
 class Randomizer:
@@ -17,21 +88,5 @@ class Randomizer:
     def get_tetromino(self):
         if len(self.bag) == 0:
             self.bag = ['I', 'J', 'L', 'O', 'S', 'Z', 'T']
-            shuffle(self.bag)
-        tetromino = self.bag.pop()
-        if tetromino == 'I':
-            return I()
-        elif tetromino == 'J':
-            return J()
-        elif tetromino == 'L':
-            return L()
-        elif tetromino == 'O':
-            return O()
-        elif tetromino == 'S':
-            return S()
-        elif tetromino == 'Z':
-            return Z()
-        elif tetromino == 'T':
-            return T()
-        else:
-            raise Exception
+            random.shuffle(self.bag)
+        return Tetromino.Tetromino(3, -1, 0, TETROMINOES[self.bag.pop()])
