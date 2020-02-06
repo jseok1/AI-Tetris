@@ -89,4 +89,4 @@ class Randomizer:
         if len(self.bag) == 0:
             self.bag = ['I', 'J', 'L', 'O', 'S', 'Z', 'T']
             random.shuffle(self.bag)
-        return Tetromino.Tetromino(3, -1, 0, TETROMINOES[self.bag.pop()])
+        return Tetromino.Tetromino(3, -1, 0, TETROMINOES[self.bag.pop()], 4)

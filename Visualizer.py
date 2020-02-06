@@ -1,7 +1,12 @@
 import pygame
 
-DIMENSIONS = (300, 600)
+import Tetris
+
+DIMENSIONS = (600, 800)  # 3:4 aspect ratio recommended
 FPS = 60
+
+WIDTH = 10
+HEIGHT = 20
 
 WHITE = (255, 255, 255)
 GREY = (240, 240, 240)
@@ -15,72 +20,97 @@ COLOURS = {'I': (130, 215, 255),
            'T': (170, 140, 255),
            'X': (209, 243, 255)}
 
+DELAY = 75 
+
 
 class Visualizer:
 
-    def __init__(self, game):
-        self.game = game
+    def __init__(self):
+        self.game = None
+        self.screen = None
 
     def run_game(self):
-        """Initialize and run this visualizer."""
+        """Initialize and run Tetris."""
         pygame.init()
         pygame.display.set_caption('Tetris')
-        screen = pygame.display.set_mode(DIMENSIONS)
-        self.game_loop(screen)
+        self.game = Tetris.Tetris(WIDTH, HEIGHT)
+        self.screen = pygame.display.set_mode(DIMENSIONS)
+        self.game_loop()
 
-    def game_loop(self, screen):
-        """Respond to events and update the visualizer."""
+    def game_loop(self):
+        """Handle player input and draw to the screen."""
         clock = pygame.time.Clock()
+        prev_time = pygame.time.get_ticks()
         is_running = True
+
         while is_running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     is_running = False
-                elif event.type == pygame.KEYDOWN:
-                    if self.game.game_state == 1:
-                        if event.key == pygame.K_LEFT:
-                            self.game.move_left()
-                        elif event.key == pygame.K_RIGHT:
-                            self.game.move_right()
-                        elif event.key == pygame.K_DOWN:
-                            self.game.move_down()
-                        if event.key == pygame.K_SPACE:
-                            self.game.drop_down()
-                        elif event.key == pygame.K_x:
-                            self.game.rotate_clockwise()
-                        elif event.key == pygame.K_z:
-                            self.game.rotate_counterclockwise()
+                elif event.type == pygame.KEYDOWN and self.game.game_state == 1:
+                    if event.key == pygame.K_SPACE:
+                        self.game.drop_down()
+                    elif event.key == pygame.K_x:
+                        self.game.rotate_clockwise()
+                    elif event.key == pygame.K_z:
+                        self.game.rotate_counterclockwise()
+
+            pressed = pygame.key.get_pressed()
+            curr_time = pygame.time.get_ticks()
+            if curr_time > prev_time + DELAY and self.game.game_state == 1:
+                if pressed[pygame.K_LEFT]:
+                    self.game.move_left()
+                elif pressed[pygame.K_RIGHT]:
+                    self.game.move_right()
+                elif pressed[pygame.K_DOWN]:
+                    self.game.move_down()
+                prev_time = pygame.time.get_ticks()
+                
+
+                
             self.game.update()
-            self.draw(screen)
+            self.draw()
             if self.game.game_state == 0:
                 is_running = False
             clock.tick(FPS)
         pygame.quit()
 
-    def draw(self, screen):
-        screen.fill(WHITE)
-        width = DIMENSIONS[0] / 10
-        height = DIMENSIONS[1] / 20
+    def draw(self):
+        self.screen.fill(WHITE)
 
-        for y in range(20):
-            line = pygame.Rect(0, y * height, DIMENSIONS[0], 1)
-            pygame.draw.rect(screen, GREY, line)
-        for x in range(10):
-            line = pygame.Rect(x * width, 0, 1, DIMENSIONS[1])
-            pygame.draw.rect(screen, GREY, line)
+        length = DIMENSIONS[1] * 0.9 / HEIGHT
+        x_init = (DIMENSIONS[0] - length * 15) / 2
+        y_init = length
 
-        for y in range(20):
-            for x in range(10):
-                if self.game.grid.grid[y][x].isupper():
-                    block = pygame.Rect(x * width, y * height, width, height)
+        for y in range(HEIGHT + 1):
+            line = pygame.Rect(x_init, y_init + y * length, length * WIDTH, 1)
+            pygame.draw.rect(self.screen, GREY, line)
+        for x in range(WIDTH + 1):
+            line = pygame.Rect(x_init + x * length, y_init, 1, length * HEIGHT)
+            pygame.draw.rect(self.screen, GREY, line)
+
+        for y in range(HEIGHT):
+            for x in range(WIDTH):
+                if self.game.grid.grid[y][x].isalpha():
+                    block = pygame.Rect(x_init + x * length, y_init + y * length, length, length)
                     colour = COLOURS[self.game.grid.grid[y][x]]
-                    pygame.draw.rect(screen, colour, block)
+                    pygame.draw.rect(self.screen, colour, block)
 
         if self.game.game_state == 1:
-            for y in range(4):
-                for x in range(4):
-                    if self.game.current_tetromino.shapes[self.game.current_tetromino.rotation][y][x] != '.':
-                        block = pygame.Rect((self.game.current_tetromino.x + x) * width, (self.game.current_tetromino.y + y) * height, width, height)
-                        colour = COLOURS[self.game.current_tetromino.shapes[self.game.current_tetromino.rotation][y][x]]
-                        pygame.draw.rect(screen, colour, block)
+            tetromino = self.game.current_tetromino
+            for y in range(tetromino.length):
+                for x in range(tetromino.length):
+                    if tetromino.shapes[tetromino.rotation][y][x] != '.':
+                        block = pygame.Rect(x_init + (tetromino.x + x) * length, y_init + (tetromino.y + y) * length, length, length)
+                        colour = COLOURS[tetromino.shapes[tetromino.rotation][y][x]]
+                        pygame.draw.rect(self.screen, colour, block)
+
+
+        
         pygame.display.flip()
+
+
+
+
+
+    

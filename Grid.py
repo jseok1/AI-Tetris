@@ -8,19 +8,21 @@ class Grid:
         self.grid = [['.'] * self.width for _ in range(self.height)]
 
     def can_clear(self):
+        """Return true if and only if a line can be cleared."""
         for y in range(self.height):
             if '.' not in self.grid[y]:
                 return True
         return False
 
-    # TODO: make more efficient
     def clear_line(self, n):
-        if ''.join(self.grid[n]).islower():
-            for x in range(self.width):
-                self.grid[n][x] = self.grid[n][x].upper()
+        """Clear the next non-empty block in line <n>, from left to right."""
+        if self.grid[n][0] != '-':
+            self.grid[n][0] = '-'
         else:
-            for x in range(self.width):
-                 self.grid[n][x] = self.grid[n][x].lower()
+            for x in range(self.width - 2, -1, -1):
+                if self.grid[n][x] == '-':
+                    self.grid[n][x + 1] = '-'
+                    break
 
     def clear_lines(self):
         for y in range(self.height):
@@ -40,8 +42,8 @@ class Grid:
     def can_place(self, tetromino, adj_x, adj_y, adj_rot):
         for y in range(len(tetromino.shapes[0])):
             for x in range(len(tetromino.shapes[0][0])):
-                new_rot = (tetromino.rotation + adj_rot) % len(tetromino.shapes)
-                if tetromino.shapes[new_rot][y][x] != '.':
+                k = (tetromino.rotation + adj_rot) % len(tetromino.shapes)
+                if tetromino.shapes[k][y][x] != '.':
                     i = tetromino.x + x + adj_x
                     j = tetromino.y + y + adj_y
                     if i < 0 or i > self.width - 1:
@@ -53,8 +55,8 @@ class Grid:
         return True
 
     def place_tetromino(self, tetromino):
-        for y in range(len(tetromino.shapes[0])):
-            for x in range(len(tetromino.shapes[0][0])):
-                entry = tetromino.shapes[tetromino.rotation][y][x]
-                if entry != '.':
-                    self.grid[tetromino.y + y][tetromino.x + x] = entry
+        for y in range(tetromino.length):
+            for x in range(tetromino.length):
+                block = tetromino.shapes[tetromino.rotation][y][x]
+                if block != '.':
+                    self.grid[tetromino.y + y][tetromino.x + x] = block

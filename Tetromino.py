@@ -1,12 +1,13 @@
 class Tetromino:
     """A Tetromino class."""
 
-    def __init__(self, x, y, rotation, shapes):
+    def __init__(self, x, y, rotation, shapes, length):
         """Initialize a new Tetromino."""
         self.x = x
         self.y = y
         self.rotation = rotation
         self.shapes = shapes
+        self.length = length
 
     def move(self, adj_x, adj_y):
         """Move this Tetromino in the desired direction."""
