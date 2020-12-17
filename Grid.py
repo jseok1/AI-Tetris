@@ -1,10 +1,10 @@
 class Grid:
-    """A grid class."""
+    """A grid implementation."""
 
     def __init__(self, width, height):
-        """Initialize a new grid."""
+        """Initialize a new grid with width <width> and height <height>."""
         self.width = width
-        self.height = height
+        self.height = height + 1
         self.grid = [['.'] * self.width for _ in range(self.height)]
 
     def can_clear(self):
@@ -35,22 +35,26 @@ class Grid:
         self.grid[0] = ['.'] * self.width
 
     def shift_lines(self):
+        lines = 0
         for y in range(self.height):
             if '.' not in self.grid[y]:
                 self.shift_line(y)
+                lines += 1
+        return lines
 
     def can_place(self, tetromino, adj_x, adj_y, adj_rot):
-        for y in range(len(tetromino.shapes[0])):
-            for x in range(len(tetromino.shapes[0][0])):
-                k = (tetromino.rotation + adj_rot) % len(tetromino.shapes)
-                if tetromino.shapes[k][y][x] != '.':
-                    i = tetromino.x + x + adj_x
-                    j = tetromino.y + y + adj_y
-                    if i < 0 or i > self.width - 1:
+        """Return true if and only if <tetromino> can be placed."""
+        for y in range(tetromino.length):
+            for x in range(tetromino.length):
+                new_rot = (tetromino.rotation + adj_rot) % len(tetromino.shapes)
+                if tetromino.shapes[new_rot][y][x] != '.':
+                    new_x = tetromino.x + x + adj_x
+                    new_y = tetromino.y + y + adj_y
+                    if new_x < 0 or new_x > self.width - 1:
                         return False
-                    if j < 0 or j > self.height - 1:
+                    if new_y < 0 or new_y > self.height - 1:
                         return False
-                    if self.grid[j][i] != '.':
+                    if self.grid[new_y][new_x] != '.':
                         return False
         return True
 

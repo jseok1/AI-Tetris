@@ -1,18 +1,14 @@
 class Timer:
 
-    def __init__(self, rate):
+    def __init__(self, frames):
         self.count = 0
-        self.rate = rate
+        self.frames = frames
     
     def tick(self):
         self.count += 1
-        if self.count == self.rate:
+        if self.count == self.frames:
             self.count = 0
         return self.count
-    
-    def accelerate(self, rate):
-        self.count = 0
-        self.rate = rate
 
     def reset(self):
         self.count = 0

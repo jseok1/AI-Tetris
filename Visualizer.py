@@ -2,8 +2,10 @@ import pygame
 
 import Tetris
 
-DIMENSIONS = (600, 800)  # 3:4 aspect ratio recommended
 FPS = 60
+
+DIMENSIONS = (500, 600)
+UNIT = 25
 
 WIDTH = 10
 HEIGHT = 20
@@ -11,14 +13,13 @@ HEIGHT = 20
 WHITE = (255, 255, 255)
 GREY = (240, 240, 240)
 
-COLOURS = {'I': (130, 215, 255),
-           'J': (100, 170, 255),
-           'L': (255, 170, 70),
-           'O': (255, 220, 100),
-           'S': (155, 255, 110),
-           'Z': (255, 100, 100),
-           'T': (170, 140, 255),
-           'X': (209, 243, 255)}
+COLOURS = {'I': (90, 180, 255),
+           'J': (50, 130, 245),
+           'L': (255, 100, 35),
+           'O': (255, 175, 5),
+           'S': (15, 220, 25),
+           'Z': (245, 55, 35),
+           'T': (150, 100, 200)}
 
 DELAY = 75 
 
@@ -29,11 +30,11 @@ class Visualizer:
         self.game = None
         self.screen = None
 
-    def run_game(self):
+    def run_game(self, level):
         """Initialize and run Tetris."""
         pygame.init()
         pygame.display.set_caption('Tetris')
-        self.game = Tetris.Tetris(WIDTH, HEIGHT)
+        self.game = Tetris.Tetris(WIDTH, HEIGHT, level)
         self.screen = pygame.display.set_mode(DIMENSIONS)
         self.game_loop()
 
@@ -70,47 +71,73 @@ class Visualizer:
                 
             self.game.update()
             self.draw()
-            if self.game.game_state == 0:
-                is_running = False
             clock.tick(FPS)
         pygame.quit()
 
     def draw(self):
-        self.screen.fill(WHITE)
+        self.screen.fill((15, 45, 85))
 
-        length = DIMENSIONS[1] * 0.9 / HEIGHT
-        x_init = (DIMENSIONS[0] - length * 15) / 2
+        length = 25
+        x_init = length
         y_init = length
 
-        for y in range(HEIGHT + 1):
-            line = pygame.Rect(x_init, y_init + y * length, length * WIDTH, 1)
-            pygame.draw.rect(self.screen, GREY, line)
-        for x in range(WIDTH + 1):
-            line = pygame.Rect(x_init + x * length, y_init, 1, length * HEIGHT)
-            pygame.draw.rect(self.screen, GREY, line)
+        
 
+        start = (110, 145, 200)
+        end = (20, 55, 110)
+
+        for x in range(length * WIDTH // 2):
+            red = start[0] + (end[0] - start[0]) / (length * WIDTH) * x * 2
+            green = start[1] + (end[1] - start[1]) / (length * WIDTH) * x * 2
+            blue = start[2] + (end[2] - start[2]) / (length * WIDTH) * x * 2
+            line = pygame.Rect(x_init + x, y_init, 1, length * HEIGHT)
+            pygame.draw.rect(self.screen, (red, green, blue), line)
+
+        for x in range(length * WIDTH // 2):
+            red = end[0] + (start[0] - end[0]) / (length * WIDTH) * x * 2
+            green = end[1] + (start[1] - end[1]) / (length * WIDTH) * x * 2
+            blue = end[2] + (start[2] - end[2]) / (length * WIDTH) * x * 2
+            line = pygame.Rect(x_init + x + length * WIDTH / 2, y_init, 1, length * HEIGHT)
+            pygame.draw.rect(self.screen, (red, green, blue), line)
+
+        self.draw_game_surface()
+        self.draw_hold_surface()
+        pygame.display.flip()
+
+    def draw_hold_surface(self):
+        surface = pygame.Surface((5 * UNIT, 2.5 * UNIT))
+        # draw current tetromino
+        tetromino = self.game.next_tetromino[0]
+        for y in range(tetromino.length):
+            for x in range(tetromino.length):
+                if tetromino.shapes[tetromino.rotation][y][x] != '.':
+                    block = pygame.Rect(x * UNIT, (y - 1) * UNIT, UNIT, UNIT)
+                    colour = COLOURS[tetromino.shapes[tetromino.rotation][y][x]]
+                    pygame.draw.rect(surface, colour, block)  
+
+        self.screen.blit(surface, (12 * UNIT, UNIT))
+
+    def draw_game_surface(self):
+        """Render the current tetrominos and board."""
+        surface = pygame.Surface((WIDTH * UNIT, HEIGHT * UNIT))
+
+        # draw previous tetrominoes
         for y in range(HEIGHT):
             for x in range(WIDTH):
-                if self.game.grid.grid[y][x].isalpha():
-                    block = pygame.Rect(x_init + x * length, y_init + y * length, length, length)
-                    colour = COLOURS[self.game.grid.grid[y][x]]
-                    pygame.draw.rect(self.screen, colour, block)
+                if self.game.grid.grid[y + 1][x].isalpha():
+                    block = pygame.Rect(x * UNIT, y * UNIT, UNIT, UNIT)
+                    colour = COLOURS[self.game.grid.grid[y + 1][x]]
+                    pygame.draw.rect(surface, colour, block)
 
+        # draw current tetromino
         if self.game.game_state == 1:
             tetromino = self.game.current_tetromino
             for y in range(tetromino.length):
                 for x in range(tetromino.length):
                     if tetromino.shapes[tetromino.rotation][y][x] != '.':
-                        block = pygame.Rect(x_init + (tetromino.x + x) * length, y_init + (tetromino.y + y) * length, length, length)
+                        block = pygame.Rect((tetromino.x + x) * UNIT, (tetromino.y + y - 1) * UNIT, UNIT, UNIT)
                         colour = COLOURS[tetromino.shapes[tetromino.rotation][y][x]]
-                        pygame.draw.rect(self.screen, colour, block)
-
-
+                        pygame.draw.rect(surface, colour, block)     
         
-        pygame.display.flip()
-
-
-
-
-
-    
+        self.screen.blit(surface, (UNIT, UNIT))
+        

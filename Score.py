@@ -3,10 +3,12 @@ class Score:
     def __init__(self):
         self.score = 0
 
-    def score_points(self, lines_cleared):
-        if lines_cleared == 4:
-            self.score += 800
-        elif lines_cleared == 3:
-            self.score += 500
+    def score_points(self, lines, level):
+        if lines == 4:
+            self.score += 1200 * level
+        elif lines == 3:
+            self.score += 300 * level
+        elif lines == 2:
+            self.score += 100 * level
         else:
-            self.score += lines_cleared * 100
+            self.score += 40 * level
