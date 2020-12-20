@@ -55,7 +55,7 @@ class Visualizer:
                     elif event.key == pygame.K_z:
                         self.game.rotate_counterclockwise()
 
-            # redirect during ARE, entry delay refresh
+            # redirect during ARE, entry delay refresh, fall timer, check das numbers... is 16 right? inclusive/exclusive bounds?
             keys = pygame.key.get_pressed()
             pressed = sum([keys[pygame.K_DOWN], keys[pygame.K_LEFT], keys[pygame.K_RIGHT]])
             if self.game.game_state == 1 and pressed < 2:
@@ -92,6 +92,8 @@ class Visualizer:
                     else:
                         count += 1
                 previous = current
+            elif self.game.game_state == 3:
+                previous = None # change!
 
             self.game.update()
             self.draw()
