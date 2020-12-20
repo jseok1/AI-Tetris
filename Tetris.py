@@ -38,27 +38,13 @@ class Tetris:
         if self.grid.can_place(self.current_tetromino, 0, 1, 0):
             self.current_tetromino.move(0, 1)
         else:
-            self.grid.place_tetromino(self.current_tetromino)
-            if self.grid.can_clear():
-                self.delay = Timer.Timer(20)
-                self.game_state = 2
-            else:
-                self.timer.reset()
-                self.delay = Timer.Timer(10)
-                self.game_state = 3
+            self.place_tetromino()
 
     def drop_down(self):
         """Move the current tetromino down as far as possible."""
         while self.grid.can_place(self.current_tetromino, 0, 1, 0):
             self.current_tetromino.move(0, 1)
-        self.grid.place_tetromino(self.current_tetromino)
-        if self.grid.can_clear():
-            self.delay = Timer.Timer(20)
-            self.game_state = 2
-        else:
-            self.timer.reset()
-            self.delay = Timer.Timer(10)
-            self.game_state = 3
+        self.place_tetromino()
 
     def rotate_clockwise(self):
         """Rotate the current tetromino clockwise, if possible."""
@@ -69,6 +55,17 @@ class Tetris:
         """Rotate the current tetromino counterclockwise, if possible."""
         if self.grid.can_place(self.current_tetromino, 0, 0, -1):
             self.current_tetromino.rotate(-1)
+    
+    def place_tetromino(self):
+        """Place the current tetromino in its current position."""
+        self.grid.place_tetromino(self.current_tetromino)
+        if self.grid.can_clear():
+            self.delay = Timer.Timer(20)
+            self.game_state = 2
+        else:
+            self.timer.reset()
+            self.delay = Timer.Timer(10)
+            self.game_state = 3
 
     def reset_tetromino(self):
         """Replace the current tetromino with another randomly generated tetromino."""
@@ -78,7 +75,7 @@ class Tetris:
             self.game_state = 0
 
     def accelerate_tetromino(self):
-        """Accelerate the fall rate of the current tetromino."""
+        """Accelerate the speed of the current tetromino."""
         if self.level < 9:
             self.timer = Timer.Timer(48 - self.level * 5)
         elif self.level == 9:

@@ -2,8 +2,6 @@ import pygame
 
 import Tetris
 
-FPS = 60
-
 DIMENSIONS = (500, 600)
 UNIT = 25
 
@@ -20,8 +18,6 @@ COLOURS = {'I': (90, 180, 255),
            'S': (15, 220, 25),
            'Z': (245, 55, 35),
            'T': (150, 100, 200)}
-
-DELAY = 75 
 
 
 class Visualizer:
@@ -41,7 +37,10 @@ class Visualizer:
     def game_loop(self):
         """Handle player input and draw to the screen."""
         clock = pygame.time.Clock()
-        prev_time = pygame.time.get_ticks()
+        font = pygame.font.SysFont("Arial", 18)
+        count = 0
+        rate = 0
+        previous = None
         is_running = True
 
         while is_running:
@@ -56,22 +55,48 @@ class Visualizer:
                     elif event.key == pygame.K_z:
                         self.game.rotate_counterclockwise()
 
-            pressed = pygame.key.get_pressed()
-            curr_time = pygame.time.get_ticks()
-            if curr_time > prev_time + DELAY and self.game.game_state == 1:
-                if pressed[pygame.K_LEFT]:
-                    self.game.move_left()
-                elif pressed[pygame.K_RIGHT]:
-                    self.game.move_right()
-                elif pressed[pygame.K_DOWN]:
-                    self.game.move_down()
-                prev_time = pygame.time.get_ticks()
-                
+            # redirect during ARE, entry delay refresh
+            keys = pygame.key.get_pressed()
+            pressed = sum([keys[pygame.K_DOWN], keys[pygame.K_LEFT], keys[pygame.K_RIGHT]])
+            if self.game.game_state == 1 and pressed < 2:
+                current = None
+                if keys[pygame.K_DOWN]:
+                    current = pygame.K_DOWN
+                elif keys[pygame.K_LEFT]:
+                    current = pygame.K_LEFT
+                elif keys[pygame.K_RIGHT]:
+                    current = pygame.K_RIGHT
 
-                
+                if current == pygame.K_DOWN:
+                    if current != previous:
+                        rate = 0
+                    if rate == 0:
+                        self.game.move_down()
+                    rate = (rate + 1) % 2
+                elif current == pygame.K_LEFT or current == pygame.K_RIGHT:
+                    if current != previous:
+                        count = 0
+                    blocked = False
+                    if count % 16 == 0:
+                        x = self.game.current_tetromino.x
+                        if current == pygame.K_LEFT:
+                            self.game.move_left()
+                        else:
+                            self.game.move_right()
+                        if self.game.current_tetromino.x == x:
+                            blocked = True
+                    if blocked:
+                        count = 16
+                    elif count == 16:
+                        count = 10
+                    else:
+                        count += 1
+                previous = current
+
             self.game.update()
             self.draw()
-            clock.tick(FPS)
+            clock.tick(60)
+        
         pygame.quit()
 
     def draw(self):
@@ -83,22 +108,22 @@ class Visualizer:
 
         
 
-        start = (110, 145, 200)
-        end = (20, 55, 110)
+        # start = (110, 145, 200)
+        # end = (20, 55, 110)
 
-        for x in range(length * WIDTH // 2):
-            red = start[0] + (end[0] - start[0]) / (length * WIDTH) * x * 2
-            green = start[1] + (end[1] - start[1]) / (length * WIDTH) * x * 2
-            blue = start[2] + (end[2] - start[2]) / (length * WIDTH) * x * 2
-            line = pygame.Rect(x_init + x, y_init, 1, length * HEIGHT)
-            pygame.draw.rect(self.screen, (red, green, blue), line)
+        # for x in range(length * WIDTH // 2):
+        #     red = start[0] + (end[0] - start[0]) / (length * WIDTH) * x * 2
+        #     green = start[1] + (end[1] - start[1]) / (length * WIDTH) * x * 2
+        #     blue = start[2] + (end[2] - start[2]) / (length * WIDTH) * x * 2
+        #     line = pygame.Rect(x_init + x, y_init, 1, length * HEIGHT)
+        #     pygame.draw.rect(self.screen, (red, green, blue), line)
 
-        for x in range(length * WIDTH // 2):
-            red = end[0] + (start[0] - end[0]) / (length * WIDTH) * x * 2
-            green = end[1] + (start[1] - end[1]) / (length * WIDTH) * x * 2
-            blue = end[2] + (start[2] - end[2]) / (length * WIDTH) * x * 2
-            line = pygame.Rect(x_init + x + length * WIDTH / 2, y_init, 1, length * HEIGHT)
-            pygame.draw.rect(self.screen, (red, green, blue), line)
+        # for x in range(length * WIDTH // 2):
+        #     red = end[0] + (start[0] - end[0]) / (length * WIDTH) * x * 2
+        #     green = end[1] + (start[1] - end[1]) / (length * WIDTH) * x * 2
+        #     blue = end[2] + (start[2] - end[2]) / (length * WIDTH) * x * 2
+        #     line = pygame.Rect(x_init + x + length * WIDTH / 2, y_init, 1, length * HEIGHT)
+        #     pygame.draw.rect(self.screen, (red, green, blue), line)
 
         self.draw_game_surface()
         self.draw_hold_surface()
