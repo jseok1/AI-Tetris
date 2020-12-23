@@ -1,5 +1,4 @@
 class Grid:
-    """A grid implementation."""
 
     def __init__(self, width, height):
         """Initialize a new grid with width <width> and height <height>."""

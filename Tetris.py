@@ -6,7 +6,6 @@ import Timer
 
 
 class Tetris:
-    """A Tetris implementation."""
 
     def __init__(self, width, height, level):
         self.game_state = 1
@@ -40,8 +39,15 @@ class Tetris:
         else:
             self.place_tetromino()
 
-    def drop_down(self):
-        """Move the current tetromino down as far as possible."""
+    def soft_drop(self, toggle):
+        """Accelerate the speed of the current tetromino to 0.5G."""
+        if toggle:
+            self.timer = Timer.Timer(2)
+        else:
+            self.accelerate_tetromino()
+
+    def hard_drop(self):
+        """Accelerate the speed of the current tetromino to 20G."""
         while self.grid.can_place(self.current_tetromino, 0, 1, 0):
             self.current_tetromino.move(0, 1)
         self.place_tetromino()
@@ -115,4 +121,3 @@ class Tetris:
             if self.delay.tick() == 0:
                 self.game_state = 1
                 self.reset_tetromino()
-                

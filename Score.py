@@ -4,6 +4,7 @@ class Score:
         self.score = 0
 
     def score_points(self, lines, level):
+        """Score points for the lines cleared."""
         if lines == 4:
             self.score += 1200 * level
         elif lines == 3:

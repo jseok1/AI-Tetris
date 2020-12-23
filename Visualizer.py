@@ -38,11 +38,11 @@ class Visualizer:
         """Handle player input and draw to the screen."""
         clock = pygame.time.Clock()
         font = pygame.font.SysFont("Arial", 18)
-        count = 0
-        rate = 0
         previous = None
-        is_running = True
+        count = 0  # for delayed auto shift
+        toggle = False  # for soft drop
 
+        is_running = True
         while is_running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -55,45 +55,45 @@ class Visualizer:
                     elif event.key == pygame.K_z:
                         self.game.rotate_counterclockwise()
 
-            # redirect during ARE, entry delay refresh, fall timer, check das numbers... is 16 right? inclusive/exclusive bounds?
             keys = pygame.key.get_pressed()
-            pressed = sum([keys[pygame.K_DOWN], keys[pygame.K_LEFT], keys[pygame.K_RIGHT]])
-            if self.game.game_state == 1 and pressed < 2:
-                current = None
-                if keys[pygame.K_DOWN]:
-                    current = pygame.K_DOWN
-                elif keys[pygame.K_LEFT]:
-                    current = pygame.K_LEFT
-                elif keys[pygame.K_RIGHT]:
-                    current = pygame.K_RIGHT
+            keys = {key: keys[key] for key in [pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]}
+            pressed = sum(keys.values())            
+            
+            if (not keys[pygame.K_DOWN] or pressed > 1) and toggle:
+                toggle = False
+                self.game.soft_drop(toggle)
 
-                if current == pygame.K_DOWN:
-                    if current != previous:
-                        rate = 0
-                    if rate == 0:
-                        self.game.move_down()
-                    rate = (rate + 1) % 2
-                elif current == pygame.K_LEFT or current == pygame.K_RIGHT:
-                    if current != previous:
-                        count = 0
-                    blocked = False
-                    if count % 16 == 0:
-                        x = self.game.current_tetromino.x
-                        if current == pygame.K_LEFT:
-                            self.game.move_left()
+            if pressed < 2:
+                current = -1
+                for key in keys:
+                    if keys[key]:
+                        current = key
+                        break
+
+                if self.game.game_state == 1:
+                    if current == pygame.K_DOWN:
+                        if current != previous:
+                            toggle = True
+                            self.game.soft_drop(toggle)                            
+                    elif current == pygame.K_LEFT or current == pygame.K_RIGHT:
+                        if current != previous:
+                            count = 0
+                        blocked = False
+                        if count % 16 == 0:
+                            x = self.game.current_tetromino.x
+                            if current == pygame.K_LEFT:
+                                self.game.move_left()
+                            else:
+                                self.game.move_right()
+                            if self.game.current_tetromino.x == x:
+                                blocked = True
+                        if blocked:
+                            count = 16
+                        elif count == 16:
+                            count = 10
                         else:
-                            self.game.move_right()
-                        if self.game.current_tetromino.x == x:
-                            blocked = True
-                    if blocked:
-                        count = 16
-                    elif count == 16:
-                        count = 10
-                    else:
-                        count += 1
+                            count += 1
                 previous = current
-            elif self.game.game_state == 3:
-                previous = None # change!
 
             self.game.update()
             self.draw()
