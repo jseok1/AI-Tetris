@@ -80,14 +80,28 @@ TETROMINOES = {'I': [['....',
                       '....']]}
 
 
+# class Randomizer:
+
+#     def __init__(self):
+#         self.bag = []
+
+#     def get_tetromino(self):
+#         """Return a pseudo-random tetromino using the 7-bag algorithm."""
+#         if len(self.bag) == 0:
+#             self.bag = ['I', 'J', 'L', 'O', 'S', 'Z', 'T']
+#             random.shuffle(self.bag)
+#         tetromino = self.bag.pop()
+#         return Tetromino.Tetromino(3, 0 if tetromino == 'I' else 1, 0, TETROMINOES[tetromino])
+
 class Randomizer:
 
     def __init__(self):
-        self.bag = []
+        self.previous_tetromino = None
 
-    def get_tetromino(self, classic=False):
-        """Return a pseudo-random tetromino using the 7-bag algorithm."""
-        if len(self.bag) == 0:
-            self.bag = ['I', 'J', 'L', 'O', 'S', 'Z', 'T']
-            random.shuffle(self.bag)
-        return Tetromino.Tetromino(3, 0, 0, TETROMINOES[self.bag.pop()], 4)
+    def get_tetromino(self):
+        """Return a pseudo-random tetromino."""
+        tetromino = random.choice(['I', 'J', 'L', 'O', 'S', 'Z', 'T', ''])
+        if tetromino == self.previous_tetromino or not tetromino:
+            tetromino = random.choice(['I', 'J', 'L', 'O', 'S', 'Z', 'T'])
+        self.previous_tetromino = tetromino
+        return Tetromino.Tetromino(3, 0 if tetromino == 'I' else 1, 0, TETROMINOES[tetromino])

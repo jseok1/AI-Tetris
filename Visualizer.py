@@ -2,62 +2,72 @@ import pygame
 
 import Tetris
 
-DIMENSIONS = (500, 600)
 UNIT = 25
+DIMENSIONS = (UNIT * 17, UNIT * 22)
 
 WIDTH = 10
 HEIGHT = 20
 
 WHITE = (255, 255, 255)
-GREY = (240, 240, 240)
+LIGHT = (35, 65, 115)
+DARK = (10, 20, 35)
 
 COLOURS = {'I': (90, 180, 255),
-           'J': (50, 130, 245),
+           'J': (45, 120, 255),
            'L': (255, 100, 35),
-           'O': (255, 175, 5),
-           'S': (15, 220, 25),
-           'Z': (245, 55, 35),
-           'T': (150, 100, 200)}
+           'O': (245, 180, 50),
+           'S': (50, 225, 60),
+           'Z': (245, 65, 45),
+           'T': (185, 90, 235)}
+
+FONT = 'Arial Narrow'
 
 
 class Visualizer:
 
-    def __init__(self):
+    def __init__(self, start):
         self.game = None
+        self.start = start
+        self.record = 0
         self.screen = None
-
-    def run_game(self, level):
-        """Initialize and run Tetris."""
         pygame.init()
+
+    def run_game(self):
+        """Initialize and run Tetris."""        
         pygame.display.set_caption('Tetris')
-        self.game = Tetris.Tetris(WIDTH, HEIGHT, level)
+        self.game = Tetris.Tetris(WIDTH, HEIGHT, self.start)
         self.screen = pygame.display.set_mode(DIMENSIONS)
         self.game_loop()
 
     def game_loop(self):
         """Handle player input and draw to the screen."""
         clock = pygame.time.Clock()
-        font = pygame.font.SysFont("Arial", 18)
         previous = None
         count = 0  # for delayed auto shift
         toggle = False  # for soft drop
 
-        is_running = True
-        while is_running:
+        while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    is_running = False
-                elif event.type == pygame.KEYDOWN and self.game.game_state == 1:
-                    if event.key == pygame.K_SPACE:
-                        self.game.drop_down()
-                    elif event.key == pygame.K_x:
-                        self.game.rotate_clockwise()
-                    elif event.key == pygame.K_z:
-                        self.game.rotate_counterclockwise()
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.KEYDOWN:
+                    if self.game.game_state == 0:
+                        if event.key == pygame.K_RETURN:
+                            if self.game.score.score > self.record:
+                                self.record = self.game.score.score
+                            self.game = Tetris.Tetris(WIDTH, HEIGHT, self.start)
+                    elif self.game.game_state == 1:
+                        if event.key == pygame.K_SPACE:
+                            self.game.hard_drop()
+                        elif event.key == pygame.K_x:
+                            self.game.rotate_clockwise()
+                        elif event.key == pygame.K_z:
+                            self.game.rotate_counterclockwise()
 
             keys = pygame.key.get_pressed()
             keys = {key: keys[key] for key in [pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]}
-            pressed = sum(keys.values())            
+            pressed = sum(keys.values())      
             
             if (not keys[pygame.K_DOWN] or pressed > 1) and toggle:
                 toggle = False
@@ -79,7 +89,7 @@ class Visualizer:
                         if current != previous:
                             count = 0
                         blocked = False
-                        if count % 16 == 0:
+                        if count % 15 == 0:
                             x = self.game.current_tetromino.x
                             if current == pygame.K_LEFT:
                                 self.game.move_left()
@@ -88,8 +98,8 @@ class Visualizer:
                             if self.game.current_tetromino.x == x:
                                 blocked = True
                         if blocked:
-                            count = 16
-                        elif count == 16:
+                            count = 15
+                        elif count == 15:
                             count = 10
                         else:
                             count += 1
@@ -98,42 +108,44 @@ class Visualizer:
             self.game.update()
             self.draw()
             clock.tick(60)
-        
-        pygame.quit()
 
     def draw(self):
-        self.screen.fill((15, 45, 85))
+        rate = ((DARK[0] - LIGHT[0]) / DIMENSIONS[1],
+                (DARK[1] - LIGHT[1]) / DIMENSIONS[1],
+                (DARK[2] - LIGHT[2]) / DIMENSIONS[1])
 
-        length = 25
-        x_init = length
-        y_init = length
+        for i in range(DIMENSIONS[1]):
+            colour = (min(max(LIGHT[0] + rate[0] * i, 0), 255),
+                      min(max(LIGHT[1] + rate[1] * i, 0), 255),
+                      min(max(LIGHT[2] + rate[2] * i, 0), 255))
+            line = pygame.Rect(0, i, DIMENSIONS[0], 1)
+            pygame.draw.rect(self.screen, colour, line)
 
-        
+        self.render_text('HIGH SCORE', 26, (UNIT * 12, UNIT * 9))
+        self.render_text(f'{self.record}', 40, (UNIT * 12, UNIT * 10))
 
-        # start = (110, 145, 200)
-        # end = (20, 55, 110)
+        self.render_text('SCORE', 26, (UNIT * 12, UNIT * 12))
+        self.render_text(f'{self.game.score.score}', 40, (UNIT * 12, UNIT * 13))
 
-        # for x in range(length * WIDTH // 2):
-        #     red = start[0] + (end[0] - start[0]) / (length * WIDTH) * x * 2
-        #     green = start[1] + (end[1] - start[1]) / (length * WIDTH) * x * 2
-        #     blue = start[2] + (end[2] - start[2]) / (length * WIDTH) * x * 2
-        #     line = pygame.Rect(x_init + x, y_init, 1, length * HEIGHT)
-        #     pygame.draw.rect(self.screen, (red, green, blue), line)
+        self.render_text('LEVEL', 26, (UNIT * 12, UNIT * 15))
+        self.render_text(f'{self.game.level}', 40, (UNIT * 12, UNIT * 16))
 
-        # for x in range(length * WIDTH // 2):
-        #     red = end[0] + (start[0] - end[0]) / (length * WIDTH) * x * 2
-        #     green = end[1] + (start[1] - end[1]) / (length * WIDTH) * x * 2
-        #     blue = end[2] + (start[2] - end[2]) / (length * WIDTH) * x * 2
-        #     line = pygame.Rect(x_init + x + length * WIDTH / 2, y_init, 1, length * HEIGHT)
-        #     pygame.draw.rect(self.screen, (red, green, blue), line)
+        self.render_text('LINES', 26, (UNIT * 12, UNIT * 18))
+        self.render_text(f'{self.game.lines}', 40, (UNIT * 12, UNIT * 19))
 
         self.draw_game_surface()
         self.draw_hold_surface()
         pygame.display.flip()
 
+    def render_text(self, text, size, position):
+        font = pygame.font.SysFont(FONT, size)
+        surface = font.render(text, True, WHITE)
+        self.screen.blit(surface, position)
+
+
     def draw_hold_surface(self):
-        surface = pygame.Surface((5 * UNIT, 2.5 * UNIT))
-        # draw current tetromino
+        # generalize to many pieces
+        surface = pygame.Surface((5 * UNIT, 2 * UNIT), pygame.SRCALPHA)
         tetromino = self.game.next_tetromino[0]
         for y in range(tetromino.length):
             for x in range(tetromino.length):
@@ -146,14 +158,24 @@ class Visualizer:
 
     def draw_game_surface(self):
         """Render the current tetrominos and board."""
-        surface = pygame.Surface((WIDTH * UNIT, HEIGHT * UNIT))
+        surface = pygame.Surface((WIDTH * UNIT + 2, HEIGHT * UNIT + 1), pygame.SRCALPHA)
+
+        # draw border
+        line = pygame.Rect(0, 0, 1, UNIT * HEIGHT)
+        pygame.draw.rect(surface, WHITE, line)
+
+        line = pygame.Rect(UNIT * WIDTH + 1, 0, 1, UNIT * HEIGHT)
+        pygame.draw.rect(surface, WHITE, line)
+
+        line = pygame.Rect(0, UNIT * HEIGHT, UNIT * WIDTH + 2, 1)
+        pygame.draw.rect(surface, WHITE, line)
 
         # draw previous tetrominoes
         for y in range(HEIGHT):
             for x in range(WIDTH):
-                if self.game.grid.grid[y + 1][x].isalpha():
-                    block = pygame.Rect(x * UNIT, y * UNIT, UNIT, UNIT)
-                    colour = COLOURS[self.game.grid.grid[y + 1][x]]
+                if self.game.grid.grid[y + 2][x].isalpha():
+                    block = pygame.Rect(x * UNIT + 1, y * UNIT, UNIT, UNIT)
+                    colour = COLOURS[self.game.grid.grid[y + 2][x]]
                     pygame.draw.rect(surface, colour, block)
 
         # draw current tetromino
@@ -162,7 +184,7 @@ class Visualizer:
             for y in range(tetromino.length):
                 for x in range(tetromino.length):
                     if tetromino.shapes[tetromino.rotation][y][x] != '.':
-                        block = pygame.Rect((tetromino.x + x) * UNIT, (tetromino.y + y - 1) * UNIT, UNIT, UNIT)
+                        block = pygame.Rect((tetromino.x + x) * UNIT + 1, (tetromino.y + y - 2) * UNIT, UNIT, UNIT)
                         colour = COLOURS[tetromino.shapes[tetromino.rotation][y][x]]
                         pygame.draw.rect(surface, colour, block)     
         

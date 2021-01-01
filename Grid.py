@@ -3,7 +3,7 @@ class Grid:
     def __init__(self, width, height):
         """Initialize a new grid with width <width> and height <height>."""
         self.width = width
-        self.height = height + 1
+        self.height = height + 2
         self.grid = [['.'] * self.width for _ in range(self.height)]
 
     def can_clear(self):
@@ -45,21 +45,20 @@ class Grid:
         """Return true if and only if <tetromino> can be placed."""
         for y in range(tetromino.length):
             for x in range(tetromino.length):
-                new_rot = (tetromino.rotation + adj_rot) % len(tetromino.shapes)
-                if tetromino.shapes[new_rot][y][x] != '.':
-                    new_x = tetromino.x + x + adj_x
-                    new_y = tetromino.y + y + adj_y
-                    if new_x < 0 or new_x > self.width - 1:
+                k = (tetromino.rotation + adj_rot) % len(tetromino.shapes)
+                if tetromino.shapes[k][y][x] != '.':
+                    i = tetromino.x + x + adj_x
+                    j = tetromino.y + y + adj_y
+                    if i < 0 or i > self.width - 1:
                         return False
-                    if new_y < 0 or new_y > self.height - 1:
+                    if j < 0 or j > self.height - 1:
                         return False
-                    if self.grid[new_y][new_x] != '.':
+                    if self.grid[j][i] != '.':
                         return False
         return True
 
     def place_tetromino(self, tetromino):
         for y in range(tetromino.length):
             for x in range(tetromino.length):
-                block = tetromino.shapes[tetromino.rotation][y][x]
-                if block != '.':
-                    self.grid[tetromino.y + y][tetromino.x + x] = block
+                if tetromino.shapes[tetromino.rotation][y][x] != '.':
+                    self.grid[tetromino.y + y][tetromino.x + x] = tetromino.shapes[tetromino.rotation][y][x]

@@ -1,12 +1,12 @@
 class Tetromino:
 
-    def __init__(self, x, y, rotation, shapes, length):
+    def __init__(self, x, y, rotation, shapes):
         """Initialize a new tetromino."""
         self.x = x
         self.y = y
         self.rotation = rotation
         self.shapes = shapes
-        self.length = length
+        self.length = len(self.shapes[0])
 
     def move(self, adj_x, adj_y):
         """Move this tetromino in the desired direction."""

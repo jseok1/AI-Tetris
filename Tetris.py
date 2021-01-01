@@ -12,15 +12,13 @@ class Tetris:
         self.randomizer = Randomizer.Randomizer()
         self.current_tetromino = self.randomizer.get_tetromino()
         self.next_tetromino = [self.randomizer.get_tetromino()]
-        self.hold_tetromino = None  # unused for now
         self.grid = Grid.Grid(width, height)
         self.level = level
         self.score = Score.Score()
         self.lines = 0
         self.threshold = min(level * 10 + 10, max(100, level * 10 - 50))
         self.delay = None
-        self.timer = None
-        self.accelerate_tetromino()
+        self.timer = Timer.Timer(60)
 
     def move_left(self):
         """Move the current tetromino left, if possible."""
@@ -51,6 +49,8 @@ class Tetris:
         while self.grid.can_place(self.current_tetromino, 0, 1, 0):
             self.current_tetromino.move(0, 1)
         self.place_tetromino()
+        if self.timer.rate > 48:
+            self.accelerate_tetromino()
 
     def rotate_clockwise(self):
         """Rotate the current tetromino clockwise, if possible."""
@@ -69,12 +69,12 @@ class Tetris:
             self.delay = Timer.Timer(20)
             self.game_state = 2
         else:
-            self.timer.reset()
-            self.delay = Timer.Timer(10)
+            self.delay = Timer.Timer(12)
             self.game_state = 3
 
     def reset_tetromino(self):
         """Replace the current tetromino with another randomly generated tetromino."""
+        self.timer.reset()
         self.current_tetromino = self.next_tetromino.pop(0)
         self.next_tetromino.append(self.randomizer.get_tetromino())
         if not self.grid.can_place(self.current_tetromino, 0, 0, 0):
@@ -100,7 +100,9 @@ class Tetris:
     def update(self):
         """Update the game at every frame."""
         if self.game_state == 1:  # running
-            if self.timer.tick() == 0:  
+            if self.timer.tick() == 0:
+                if self.timer.rate > 48:
+                    self.accelerate_tetromino()
                 self.move_down()
         elif self.game_state == 2:  # clearing lines
             count = self.delay.tick()
@@ -111,9 +113,8 @@ class Tetris:
                     self.threshold += 10  # accelerate every 10 lines after first acceleration
                     self.level += 1
                     self.accelerate_tetromino()
-                self.timer.reset()
                 self.score.score_points(lines, self.level)
-                self.delay = Timer.Timer(10)
+                self.delay = Timer.Timer(12)
                 self.game_state = 3
             elif count > 1:
                 self.grid.clear_lines()
