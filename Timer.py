@@ -5,7 +5,7 @@ class Timer:
         self.rate = rate
     
     def tick(self):
-        """Increment this timer by one frame."""
+        """Increment this timer."""
         self.count += 1
         if self.count == self.rate:
             self.count = 0

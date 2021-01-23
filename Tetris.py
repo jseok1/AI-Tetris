@@ -1,124 +1,131 @@
-import Grid
-import Randomizer
-import Score
-import Tetromino
-import Timer
+from grid import Grid
+from randomizer import Randomizer
+from score import Score
+from timer import Timer
+
+RATE = 2
 
 
 class Tetris:
 
-    def __init__(self, width, height, level):
-        self.game_state = 1
-        self.randomizer = Randomizer.Randomizer()
+    def __init__(self, width, height, level, gravity, seed):
+        self.state = 1
+        self.randomizer = Randomizer(seed)
         self.current_tetromino = self.randomizer.get_tetromino()
-        self.next_tetromino = [self.randomizer.get_tetromino()]
-        self.grid = Grid.Grid(width, height)
+        self.next_tetromino = self.randomizer.get_tetromino()
+        self.grid = Grid(width, height)
+        self.score = Score()
         self.level = level
-        self.score = Score.Score()
-        self.lines = 0
+        self.gravity = gravity
         self.threshold = min(level * 10 + 10, max(100, level * 10 - 50))
+        self.is_dropping = False
         self.delay = None
-        self.timer = Timer.Timer(60)
+        self.timer = Timer(60)
 
     def move_left(self):
         """Move the current tetromino left, if possible."""
-        if self.grid.can_place(self.current_tetromino, -1, 0, 0):
-            self.current_tetromino.move(-1, 0)
+        self.current_tetromino.move(-1, 0)
+        if not self.grid.can_place(self.current_tetromino):
+            self.current_tetromino.move(1, 0)
 
     def move_right(self):
         """Move the current tetromino right, if possible."""
-        if self.grid.can_place(self.current_tetromino, 1, 0, 0):
-            self.current_tetromino.move(1, 0)
+        self.current_tetromino.move(1, 0)
+        if not self.grid.can_place(self.current_tetromino):
+            self.current_tetromino.move(-1, 0)
 
     def move_down(self):
         """Move the current tetromino down, if possible."""
-        if self.grid.can_place(self.current_tetromino, 0, 1, 0):
-            self.current_tetromino.move(0, 1)
+        self.current_tetromino.move(0, 1)
+        if self.grid.can_place(self.current_tetromino):
+            if self.is_dropping:
+                self.score.points += 1
         else:
-            self.place_tetromino()
+            self.current_tetromino.move(0, -1)
+            self.grid.place_tetromino(self.current_tetromino)
+            self.toggle_drop(False)
+            if self.grid.can_clear():
+                self.delay = Timer(20)
+                self.state = 2
+            else:
+                self.delay = Timer(12)
+                self.state = 3
 
-    def soft_drop(self, toggle):
+    def toggle_drop(self, is_dropping):
         """Accelerate the speed of the current tetromino to 0.5G."""
-        if toggle:
-            self.timer = Timer.Timer(2)
-        else:
+        if is_dropping and not self.is_dropping:
+            self.is_dropping = True
             self.accelerate_tetromino()
-
-    def hard_drop(self):
-        """Accelerate the speed of the current tetromino to 20G."""
-        while self.grid.can_place(self.current_tetromino, 0, 1, 0):
-            self.current_tetromino.move(0, 1)
-        self.place_tetromino()
-        if self.timer.rate > 48:
+            self.move_down()
+        elif not is_dropping and self.is_dropping:
+            self.is_dropping = False
             self.accelerate_tetromino()
 
     def rotate_clockwise(self):
         """Rotate the current tetromino clockwise, if possible."""
-        if self.grid.can_place(self.current_tetromino, 0, 0, 1):
-            self.current_tetromino.rotate(1)
+        self.current_tetromino.rotate(1)
+        if not self.grid.can_place(self.current_tetromino):
+            self.current_tetromino.rotate(-1)
 
     def rotate_counterclockwise(self):
         """Rotate the current tetromino counterclockwise, if possible."""
-        if self.grid.can_place(self.current_tetromino, 0, 0, -1):
-            self.current_tetromino.rotate(-1)
+        self.current_tetromino.rotate(-1)
+        if not self.grid.can_place(self.current_tetromino):
+            self.current_tetromino.rotate(1)
     
-    def place_tetromino(self):
-        """Place the current tetromino in its current position."""
-        self.grid.place_tetromino(self.current_tetromino)
-        if self.grid.can_clear():
-            self.delay = Timer.Timer(20)
-            self.game_state = 2
-        else:
-            self.delay = Timer.Timer(12)
-            self.game_state = 3
-
     def reset_tetromino(self):
         """Replace the current tetromino with another randomly generated tetromino."""
         self.timer.reset()
-        self.current_tetromino = self.next_tetromino.pop(0)
-        self.next_tetromino.append(self.randomizer.get_tetromino())
-        if not self.grid.can_place(self.current_tetromino, 0, 0, 0):
-            self.game_state = 0
+        self.current_tetromino = self.next_tetromino
+        self.next_tetromino = self.randomizer.get_tetromino()
+        return self.grid.can_place(self.current_tetromino)
 
     def accelerate_tetromino(self):
         """Accelerate the speed of the current tetromino."""
-        if self.level < 9:
-            self.timer = Timer.Timer(48 - self.level * 5)
-        elif self.level == 9:
-            self.timer = Timer.Timer(6)
-        elif self.level > 9 and self.level < 13:
-            self.timer = Timer.Timer(5)
-        elif self.level > 12 and self.level < 16:
-            self.timer = Timer.Timer(4)
-        elif self.level > 15 and self.level < 19:
-            self.timer = Timer.Timer(3)
-        elif self.level > 18 and self.level < 29:
-            self.timer = Timer.Timer(2)
+        if self.is_dropping:
+            self.timer = Timer(min(RATE, self.timer.rate))
         else:
-            self.timer = Timer.Timer(1)
+            if self.level < 9:
+                self.timer = Timer(48 - self.level * 5)
+            elif self.level == 9:
+                self.timer = Timer(6)
+            elif self.level > 9 and self.level < 13:
+                self.timer = Timer(5)
+            elif self.level > 12 and self.level < 16:
+                self.timer = Timer(4)
+            elif self.level > 15 and self.level < 19:
+                self.timer = Timer(3)
+            elif self.level > 18 and self.level < 29:
+                self.timer = Timer(2)
+            else:
+                self.timer = Timer(1)
 
     def update(self):
-        """Update the game at every frame."""
-        if self.game_state == 1:  # running
-            if self.timer.tick() == 0:
-                if self.timer.rate > 48:
-                    self.accelerate_tetromino()
-                self.move_down()
-        elif self.game_state == 2:  # clearing lines
+        """Update this game."""
+        if self.state == 1:  # running
+            if self.gravity:
+                if self.timer.tick() == 0:
+                    if self.timer.rate > 48:
+                        self.accelerate_tetromino()
+                    self.move_down()
+        elif self.state == 2:  # waiting for line clear
             count = self.delay.tick()
             if count == 0:
-                lines = self.grid.shift_lines()
-                self.lines += lines
-                if self.lines >= self.threshold:  
-                    self.threshold += 10  # accelerate every 10 lines after first acceleration
+                lines = self.grid.lines
+                self.grid.update()
+                if self.grid.lines >= self.threshold:  
+                    self.threshold += 10
                     self.level += 1
                     self.accelerate_tetromino()
-                self.score.score_points(lines, self.level)
-                self.delay = Timer.Timer(12)
-                self.game_state = 3
-            elif count > 1:
-                self.grid.clear_lines()
-        elif self.game_state == 3:  # waiting for next tetromino
+                self.score.score(self.grid.lines - lines, self.level)
+                self.delay = Timer(12)
+                self.state = 3
+            elif count > 1 and count < self.grid.width + 2:
+                x = count - 2
+                self.grid.clear(x)
+        elif self.state == 3:  # waiting for next tetromino
             if self.delay.tick() == 0:
-                self.game_state = 1
-                self.reset_tetromino()
+                if self.reset_tetromino():
+                    self.state = 1
+                else:
+                    self.state = 0
