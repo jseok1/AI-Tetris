@@ -38,7 +38,8 @@ class Agent:
             copy.move(0, 1)
             if not grid.can_place(copy):
                 states.append(state)
-            for action in self.get_actions():
+            actions = self.get_actions()
+            for action in actions:
                 copy = Tetromino(tetromino.tetromino, state.x, state.y, state.orientation, tetromino.shapes)
                 action(copy)
                 if grid.can_place(copy) and (copy.x, copy.y, copy.orientation) not in visited:
@@ -47,7 +48,7 @@ class Agent:
         return states
 
     def evaluate(self, tetromino, grid, state):
-        """Return the score for a given state."""
+        """Return the optimality of a given state."""
         features = [0] * 4
         copy = Grid(grid.width, grid.height - 2)
         copy.grid = [grid.grid[i][:] for i in range(grid.height)]
@@ -67,38 +68,30 @@ class Agent:
             if x > 0:
                 features[2] += abs(current - previous)
             previous = current
-        score = 0
+        optimality = 0
         for feature, weight in zip(features, self.weights):
-            score += feature * weight
-        return score
-
-    def search(self, tetromino, grid):
-        """Search for an optimal state."""
-        optimal = (None, float('-inf'))
-        for state in self.get_states(tetromino, grid):
-            score = self.evaluate(tetromino, grid, state)
-            if score > optimal[1]:
-                optimal = (state, score)
-        state = optimal[0]
-        self.stack = [pygame.K_DOWN]  # manually place tetromino
-        while state.predecessor is not None:
-            adj_x = state.x - state.predecessor.x
-            adj_y = state.y - state.predecessor.y
-            adj_orientation = state.orientation - state.predecessor.orientation
-            if adj_x == -1:
-                self.stack.append(pygame.K_LEFT)
-            elif adj_x == 1:
-                self.stack.append(pygame.K_RIGHT)
-            elif adj_y == 1:
-                self.stack.append(pygame.K_DOWN)
-            elif adj_orientation == -1 or adj_orientation == len(tetromino.shapes) - 1:
-                self.stack.append(pygame.K_z)
-            elif adj_orientation == 1 or adj_orientation == 1 - len(tetromino.shapes):
-                self.stack.append(pygame.K_x)
-            state = state.predecessor
+            optimality += feature * weight
+        return optimality
 
     def play(self, tetromino, grid):
-        """Return an optimal action."""
+        """Find an optimal state and return an optimal action."""
         if len(self.stack) == 0:
-            self.search(tetromino, grid)
+            states = self.get_states(tetromino, grid)
+            state = max(states, key=lambda state: self.evaluate(tetromino, grid, state))
+            self.stack = [lambda game: game.move_down()]  # manually place tetromino
+            while state.predecessor is not None:
+                adj_x = state.x - state.predecessor.x
+                adj_y = state.y - state.predecessor.y
+                adj_orientation = state.orientation - state.predecessor.orientation
+                if adj_x == -1:
+                    self.stack.append(lambda game: game.move_left())
+                elif adj_x == 1:
+                    self.stack.append(lambda game: game.move_right())
+                elif adj_y == 1:
+                    self.stack.append(lambda game: game.move_down())
+                elif adj_orientation == 1 or adj_orientation == 1 - len(tetromino.shapes):
+                    self.stack.append(lambda game: game.rotate_clockwise())
+                elif adj_orientation == -1 or adj_orientation == len(tetromino.shapes) - 1:
+                    self.stack.append(lambda game: game.rotate_counterclockwise())
+                state = state.predecessor
         return self.stack.pop()

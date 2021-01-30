@@ -38,16 +38,14 @@ class Visualizer:
         self.game = Tetris(WIDTH, HEIGHT, self.level, self.mode == 1, None)
         self.screen = pygame.display.set_mode(DIMENSIONS)
         self.record = 0
-        self.pressed = None
+        self.pressed = pygame.key.get_pressed()
         self.count = 0
         self.paused = False
         self.agent = None
         self.timer = Timer(1)
         if self.mode == 0:
-            self.pressed = [0] * len(pygame.key.get_pressed())
             self.agent = Agent(WEIGHTS)            
         elif self.mode == 1:
-            self.pressed = pygame.key.get_pressed()
             try:
                 with open('data.json', 'r') as f:
                     self.record = json.load(f)['record']
@@ -57,7 +55,7 @@ class Visualizer:
         self.run()
 
     def run(self):
-        """Run the game."""
+        """Run this game."""
         clock = pygame.time.Clock()
         count = 0
         while True:
@@ -76,61 +74,58 @@ class Visualizer:
                             self.game = Tetris(WIDTH, HEIGHT, self.level, self.mode == 1, None)
                         else:
                             self.paused = not self.paused
-            if self.mode == 0:
-                if self.game.state == 1 and not self.paused and self.timer.tick() == 0:
-                    self.game.toggle_drop(False)
-                    pressed = [0] * len(self.pressed)
-                    pressed[self.agent.play(self.game.current_tetromino, self.game.grid)] = 1
-                    self.interact(pressed)
-            elif self.mode == 1:
-                pressed = pygame.key.get_pressed()
-                self.interact(pressed)
-                self.pressed = pressed
+            pressed = pygame.key.get_pressed()
             if not self.paused:
+                if self.game.state == 1:
+                    if self.mode == 0:
+                        if self.timer.tick() == 0:
+                            self.agent.play(self.game.current_tetromino, self.game.grid)(self.game)
+                    elif self.mode == 1:
+                        self.interact(pressed)
                 self.game.update()
+            self.pressed = pressed
             self.render()
             clock.tick(60)
 
     def interact(self, pressed):
         """Handle player input."""
-        if self.game.state == 1:
-            if pressed[pygame.K_x] and not self.pressed[pygame.K_x]:
-                self.game.rotate_clockwise()
-            elif pressed[pygame.K_z] and not self.pressed[pygame.K_z]:
-                self.game.rotate_counterclockwise()
-            count = 0
-            if pressed[pygame.K_LEFT]:
-                count += 1
-            if pressed[pygame.K_RIGHT]:
-                count += 1
-            if pressed[pygame.K_DOWN]:
-                count += 1
-            if not pressed[pygame.K_DOWN] or count > 1:
-                self.game.toggle_drop(False)
-            if count == 1:
-                if pressed[pygame.K_LEFT] or pressed[pygame.K_RIGHT]:
-                    x = self.game.current_tetromino.x
-                    if pressed[pygame.K_LEFT]:
-                        if not self.pressed[pygame.K_LEFT]:
-                            self.count = 0
-                        if self.count % 15 == 0:
-                            self.game.move_left()
-                    elif pressed[pygame.K_RIGHT]:
-                        if not self.pressed[pygame.K_RIGHT]:
-                            self.count = 0
-                        if self.count % 15 == 0:
-                            self.game.move_right()
-                    if self.count % 15 == 0 and self.game.current_tetromino.x == x:
-                        self.count = 15
-                    elif self.count == 15:
-                        self.count = 10
-                    else:
-                        self.count += 1
-                elif pressed[pygame.K_DOWN]:
-                    self.game.toggle_drop(True)
+        if pressed[pygame.K_x] and not self.pressed[pygame.K_x]:
+            self.game.rotate_clockwise()
+        elif pressed[pygame.K_z] and not self.pressed[pygame.K_z]:
+            self.game.rotate_counterclockwise()
+        count = 0
+        if pressed[pygame.K_LEFT]:
+            count += 1
+        if pressed[pygame.K_RIGHT]:
+            count += 1
+        if pressed[pygame.K_DOWN]:
+            count += 1
+        if not pressed[pygame.K_DOWN] or count > 1:
+            self.game.toggle_drop(False)
+        if count == 1:
+            if pressed[pygame.K_LEFT] or pressed[pygame.K_RIGHT]:
+                x = self.game.current_tetromino.x
+                if pressed[pygame.K_LEFT]:
+                    if not self.pressed[pygame.K_LEFT]:
+                        self.count = 0
+                    if self.count % 15 == 0:
+                        self.game.move_left()
+                elif pressed[pygame.K_RIGHT]:
+                    if not self.pressed[pygame.K_RIGHT]:
+                        self.count = 0
+                    if self.count % 15 == 0:
+                        self.game.move_right()
+                if self.count % 15 == 0 and self.game.current_tetromino.x == x:
+                    self.count = 15
+                elif self.count == 15:
+                    self.count = 10
+                else:
+                    self.count += 1
+            elif pressed[pygame.K_DOWN]:
+                self.game.toggle_drop(True)
 
     def render(self):
-        """Render the game."""
+        """Render this game."""
         rate = ((DARK[0] - LIGHT[0]) / DIMENSIONS[1],
                 (DARK[1] - LIGHT[1]) / DIMENSIONS[1],
                 (DARK[2] - LIGHT[2]) / DIMENSIONS[1])
@@ -147,7 +142,6 @@ class Visualizer:
 
         header = pygame.font.SysFont(FONT, 26)
         body = pygame.font.SysFont(FONT, 40)
-
         self.screen.blit(header.render('HIGH SCORE', True, WHITE), (UNIT * 12, UNIT * 9))
         self.screen.blit(body.render(f'{self.record}', True, WHITE), (UNIT * 12, UNIT * 10))
         self.screen.blit(header.render('SCORE', True, WHITE), (UNIT * 12, UNIT * 12))
@@ -158,18 +152,16 @@ class Visualizer:
         self.screen.blit(body.render(f'{self.game.grid.lines}', True, WHITE), (UNIT * 12, UNIT * 19))
 
         if self.game.state == 1:
-            tetromino = self.game.current_tetromino
-            for x, y in tetromino.shapes[tetromino.orientation]:
-                coordinates = ((tetromino.x + x + 1) * UNIT + 1, (tetromino.y + y - 1) * UNIT)
+            for x, y in self.game.current_tetromino.shapes[self.game.current_tetromino.orientation]:
+                coordinates = ((self.game.current_tetromino.x + x + 1) * UNIT + 1, (self.game.current_tetromino.y + y - 1) * UNIT)
                 block = pygame.Rect(coordinates, BLOCK)
-                colour = COLOURS[tetromino.tetromino - 1]
+                colour = COLOURS[self.game.current_tetromino.tetromino - 1]
                 pygame.draw.rect(self.screen, colour, block)
 
-        tetromino = self.game.next_tetromino
-        for x, y in tetromino.shapes[tetromino.orientation]:
+        for x, y in self.game.next_tetromino.shapes[self.game.next_tetromino.orientation]:
             coordinates = ((x + 14) * UNIT, (y + 1) * UNIT)
             block = pygame.Rect(coordinates, BLOCK)
-            colour = COLOURS[tetromino.tetromino - 1]
+            colour = COLOURS[self.game.next_tetromino.tetromino - 1]
             pygame.draw.rect(self.screen, colour, block)
         
         for y in range(2, HEIGHT + 2):
