@@ -3,8 +3,6 @@ from randomizer import Randomizer
 from score import Score
 from timer import Timer
 
-RATE = 2
-
 
 class Tetris:
 
@@ -83,7 +81,7 @@ class Tetris:
     def accelerate_tetromino(self):
         """Accelerate the speed of the current tetromino."""
         if self.is_dropping:
-            self.timer = Timer(min(RATE, self.timer.rate))
+            self.timer = Timer(min(2, self.timer.rate))
         else:
             if self.level < 9:
                 self.timer = Timer(48 - self.level * 5)

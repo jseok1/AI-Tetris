@@ -21,7 +21,7 @@ class Grid:
     def place_tetromino(self, tetromino):
         """Place a given tetromino on this grid."""
         for x, y in tetromino.shapes[tetromino.orientation]:
-            self.grid[tetromino.y + y][tetromino.x + x] = tetromino.tetromino
+            self.grid[tetromino.y + y][tetromino.x + x] = tetromino.type
 
     def can_clear(self):
         """Return true if a completed line is on this grid. Return false otherwise."""

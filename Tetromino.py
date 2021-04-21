@@ -1,7 +1,7 @@
 class Tetromino:
 
-    def __init__(self, tetromino, x, y, orientation, shapes):
-        self.tetromino = tetromino
+    def __init__(self, type, x, y, orientation, shapes):
+        self.type = type
         self.x = x
         self.y = y
         self.orientation = orientation

@@ -16,13 +16,15 @@ WHITE = (255, 255, 255)
 LIGHT = (35, 65, 115)
 DARK = (10, 20, 35)
 
-COLOURS = [(90, 180, 255),
-           (45, 120, 255),
-           (255, 100, 35),
-           (245, 180, 50),
-           (50, 225, 60),
-           (245, 65, 45),
-           (185, 90, 235)]
+COLOURS = [
+    (90, 180, 255),
+    (45, 120, 255),
+    (255, 100, 35),
+    (245, 180, 50),
+    (50, 225, 60),
+    (245, 65, 45),
+    (185, 90, 235)
+]
 
 FONT = 'Arial Narrow'
 
@@ -125,21 +127,54 @@ class Visualizer:
                 self.game.toggle_drop(True)
 
     def render(self):
-        """Render this game."""
-        rate = ((DARK[0] - LIGHT[0]) / DIMENSIONS[1],
-                (DARK[1] - LIGHT[1]) / DIMENSIONS[1],
-                (DARK[2] - LIGHT[2]) / DIMENSIONS[1])
-
+        """Render this game to the screen."""
+        self._render_background()
+        self._render_tetrominos()
+        self._render_grid()
+        self._render_text()
+        pygame.display.flip()
+        
+    def _render_background(self):
+        rate = (
+            (DARK[0] - LIGHT[0]) / DIMENSIONS[1],
+            (DARK[1] - LIGHT[1]) / DIMENSIONS[1],
+            (DARK[2] - LIGHT[2]) / DIMENSIONS[1]
+        )
         for i in range(DIMENSIONS[1]):
-            colour = (min(max(LIGHT[0] + rate[0] * i, 0), 255),
-                      min(max(LIGHT[1] + rate[1] * i, 0), 255),
-                      min(max(LIGHT[2] + rate[2] * i, 0), 255))
+            colour = (
+                min(max(LIGHT[0] + rate[0] * i, 0), 255),
+                min(max(LIGHT[1] + rate[1] * i, 0), 255),
+                min(max(LIGHT[2] + rate[2] * i, 0), 255)
+            )
             pygame.draw.line(self.screen, colour, (0, i), (DIMENSIONS[0], i))
-    
+
+    def _render_tetrominos(self):
+        if self.game.state == 1:
+            for x, y in self.game.current_tetromino.shapes[self.game.current_tetromino.orientation]:
+                if self.game.current_tetromino.y + y > 1:
+                    coordinates = ((self.game.current_tetromino.x + x + 1) * UNIT + 1, (self.game.current_tetromino.y + y - 1) * UNIT)
+                    block = pygame.Rect(coordinates, BLOCK)
+                    colour = COLOURS[self.game.current_tetromino.type - 1]
+                    pygame.draw.rect(self.screen, colour, block)
+        for x, y in self.game.next_tetromino.shapes[self.game.next_tetromino.orientation]:
+            coordinates = ((x + 14) * UNIT, (y + 1) * UNIT)
+            block = pygame.Rect(coordinates, BLOCK)
+            colour = COLOURS[self.game.next_tetromino.type - 1]
+            pygame.draw.rect(self.screen, colour, block)
+
+    def _render_grid(self):
         pygame.draw.line(self.screen, WHITE, (UNIT, UNIT), (UNIT, UNIT * (HEIGHT + 1)))
         pygame.draw.line(self.screen, WHITE, (UNIT * (WIDTH + 1) + 1, UNIT), (UNIT * (WIDTH + 1) + 1, UNIT * (HEIGHT + 1)))
         pygame.draw.line(self.screen, WHITE, (UNIT, UNIT * (HEIGHT + 1)), (UNIT * (WIDTH + 1) + 1, UNIT * (HEIGHT + 1)))
+        for y in range(2, HEIGHT + 2):
+            for x in range(WIDTH):
+                if self.game.grid.grid[y][x] != 0 and self.game.grid.grid[y][x] != 9:
+                    coordinates = ((x + 1) * UNIT + 1, (y - 1) * UNIT)
+                    block = pygame.Rect(coordinates, BLOCK)
+                    colour = COLOURS[self.game.grid.grid[y][x] - 1]
+                    pygame.draw.rect(self.screen, colour, block)
 
+    def _render_text(self):
         header = pygame.font.SysFont(FONT, 26)
         body = pygame.font.SysFont(FONT, 40)
         self.screen.blit(header.render('HIGH SCORE', True, WHITE), (UNIT * 12, UNIT * 9))
@@ -150,26 +185,3 @@ class Visualizer:
         self.screen.blit(body.render(f'{self.game.level}', True, WHITE), (UNIT * 12, UNIT * 16))
         self.screen.blit(header.render('LINES', True, WHITE), (UNIT * 12, UNIT * 18))
         self.screen.blit(body.render(f'{self.game.grid.lines}', True, WHITE), (UNIT * 12, UNIT * 19))
-
-        if self.game.state == 1:
-            for x, y in self.game.current_tetromino.shapes[self.game.current_tetromino.orientation]:
-                coordinates = ((self.game.current_tetromino.x + x + 1) * UNIT + 1, (self.game.current_tetromino.y + y - 1) * UNIT)
-                block = pygame.Rect(coordinates, BLOCK)
-                colour = COLOURS[self.game.current_tetromino.tetromino - 1]
-                pygame.draw.rect(self.screen, colour, block)
-
-        for x, y in self.game.next_tetromino.shapes[self.game.next_tetromino.orientation]:
-            coordinates = ((x + 14) * UNIT, (y + 1) * UNIT)
-            block = pygame.Rect(coordinates, BLOCK)
-            colour = COLOURS[self.game.next_tetromino.tetromino - 1]
-            pygame.draw.rect(self.screen, colour, block)
-        
-        for y in range(2, HEIGHT + 2):
-            for x in range(WIDTH):
-                if self.game.grid.grid[y][x] != 0 and self.game.grid.grid[y][x] != 9:
-                    coordinates = ((x + 1) * UNIT + 1, (y - 1) * UNIT)
-                    block = pygame.Rect(coordinates, BLOCK)
-                    colour = COLOURS[self.game.grid.grid[y][x] - 1]
-                    pygame.draw.rect(self.screen, colour, block)
-
-        pygame.display.flip()

@@ -21,11 +21,13 @@ class Agent:
 
     def get_actions(self):
         """Return all possible actions."""
-        return [lambda tetromino: tetromino.move(-1, 0),
-                lambda tetromino: tetromino.move(1, 0),
-                lambda tetromino: tetromino.move(0, 1),
-                lambda tetromino: tetromino.rotate(-1),
-                lambda tetromino: tetromino.rotate(1)]
+        return [
+            lambda tetromino: tetromino.move(-1, 0),
+            lambda tetromino: tetromino.move(1, 0),
+            lambda tetromino: tetromino.move(0, 1),
+            lambda tetromino: tetromino.rotate(-1),
+            lambda tetromino: tetromino.rotate(1)
+        ]
 
     def get_states(self, tetromino, grid):
         """Return all possible states."""
@@ -34,13 +36,13 @@ class Agent:
         queue = [State(tetromino.x, tetromino.y, tetromino.orientation, None)]
         while len(queue) > 0:
             state = queue.pop(0)
-            copy = Tetromino(tetromino.tetromino, state.x, state.y, state.orientation, tetromino.shapes)
+            copy = Tetromino(tetromino.type, state.x, state.y, state.orientation, tetromino.shapes)
             copy.move(0, 1)
             if not grid.can_place(copy):
                 states.append(state)
             actions = self.get_actions()
             for action in actions:
-                copy = Tetromino(tetromino.tetromino, state.x, state.y, state.orientation, tetromino.shapes)
+                copy = Tetromino(tetromino.type, state.x, state.y, state.orientation, tetromino.shapes)
                 action(copy)
                 if grid.can_place(copy) and (copy.x, copy.y, copy.orientation) not in visited:
                     visited.add((copy.x, copy.y, copy.orientation))
@@ -52,7 +54,7 @@ class Agent:
         features = [0] * 4
         copy = Grid(grid.width, grid.height - 2)
         copy.grid = [grid.grid[i][:] for i in range(grid.height)]
-        copy.place_tetromino(Tetromino(tetromino.tetromino, state.x, state.y, state.orientation, tetromino.shapes))
+        copy.place_tetromino(Tetromino(tetromino.type, state.x, state.y, state.orientation, tetromino.shapes))
         lines = copy.lines
         copy.update()
         features[0] = copy.lines - lines

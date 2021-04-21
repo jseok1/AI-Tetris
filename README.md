@@ -2,7 +2,7 @@
 ![](images/demo.PNG)
 
 ## Introduction
-This is an implementation of Tetris featuring an AI trained using the Genetic Algorithm.
+This is an implementation of Tetris featuring an AI trained using the Genetic Algorithm. The mechanics of the game are inspired by the 1989 NES release of Tetris.
 
 ## Installation
 1. Clone this repository to your local machine using `https://github.com/jseok1/AI-Tetris.git`.
