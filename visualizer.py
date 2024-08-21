@@ -49,7 +49,7 @@ class Visualizer:
             self.agent = Agent(WEIGHTS)            
         elif self.mode == 1:
             try:
-                with open('data.json', 'r') as f:
+                with open('savefile.json', 'r') as f:
                     self.record = json.load(f)['record']
             except:
                 pass
@@ -59,13 +59,12 @@ class Visualizer:
     def run(self):
         """Run this game."""
         clock = pygame.time.Clock()
-        count = 0
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     if self.mode == 1:
-                        with open('data.json', 'w') as f:
+                        with open('savefile.json', 'w') as f:
                             json.dump({'record': self.record}, f)
                     exit()
                 elif event.type == pygame.KEYDOWN:
@@ -81,15 +80,15 @@ class Visualizer:
                 if self.game.state == 1:
                     if self.mode == 0:
                         if self.timer.tick() == 0:
-                            self.agent.play(self.game.current_tetromino, self.game.grid)(self.game)
+                            self.agent.play(self.game.curr_tetromino, self.game.grid)(self.game)
                     elif self.mode == 1:
-                        self.interact(pressed)
+                        self.handle_interaction(pressed)
                 self.game.update()
             self.pressed = pressed
             self.draw()
             clock.tick(60)
 
-    def interact(self, pressed):
+    def handle_interaction(self, pressed):
         """Handle player input."""
         if pressed[pygame.K_x] and not self.pressed[pygame.K_x]:
             self.game.rotate_clockwise()
@@ -106,7 +105,7 @@ class Visualizer:
             self.game.toggle_drop(False)
         if count == 1:
             if pressed[pygame.K_LEFT] or pressed[pygame.K_RIGHT]:
-                x = self.game.current_tetromino.x
+                x = self.game.curr_tetromino.x
                 if pressed[pygame.K_LEFT]:
                     if not self.pressed[pygame.K_LEFT]:
                         self.count = 0
@@ -117,7 +116,7 @@ class Visualizer:
                         self.count = 0
                     if self.count % 15 == 0:
                         self.game.move_right()
-                if self.count % 15 == 0 and self.game.current_tetromino.x == x:
+                if self.count % 15 == 0 and self.game.curr_tetromino.x == x:
                     self.count = 15
                 elif self.count == 15:
                     self.count = 10
@@ -150,11 +149,11 @@ class Visualizer:
 
     def _draw_tetrominos(self):
         if self.game.state == 1:
-            for x, y in self.game.current_tetromino.shapes[self.game.current_tetromino.orientation]:
-                if self.game.current_tetromino.y + y > 1:
-                    coordinates = ((self.game.current_tetromino.x + x + 1) * UNIT + 1, (self.game.current_tetromino.y + y - 1) * UNIT)
+            for x, y in self.game.curr_tetromino.shapes[self.game.curr_tetromino.orientation]:
+                if self.game.curr_tetromino.y + y > 1:
+                    coordinates = ((self.game.curr_tetromino.x + x + 1) * UNIT + 1, (self.game.curr_tetromino.y + y - 1) * UNIT)
                     block = pygame.Rect(coordinates, BLOCK)
-                    colour = COLOURS[self.game.current_tetromino.type - 1]
+                    colour = COLOURS[self.game.curr_tetromino.type - 1]
                     pygame.draw.rect(self.screen, colour, block)
         for x, y in self.game.next_tetromino.shapes[self.game.next_tetromino.orientation]:
             coordinates = ((x + 14) * UNIT, (y + 1) * UNIT)

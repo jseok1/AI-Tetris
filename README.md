@@ -1,23 +1,39 @@
 # AI Tetris
-![](images/demo.PNG)
+![](assets/img/thumb.PNG)
 
 ## Introduction
-This is an implementation of Tetris featuring an AI trained using the Genetic Algorithm. The mechanics of the game are inspired by the 1989 NES release of Tetris.
-
-## Installation
-1. Clone this repository to your local machine using `https://github.com/jseok1/AI-Tetris.git`.
-2. Use the package manager `pip` to install `pygame`.
-```bash
-$ pip install pygame
-```
+This is an implementation of Tetris featuring an AI trained using the Genetic Algorithm. Like the 1989 NES release, the game runs at 60 frames per second and features
+mechanics like the standard rotation system and delayed auto shift (DAS).
 
 ## Usage
-To launch the game, simply run the `main.py` module.
+Install the dependencies in `requirements.txt`.
+```bash
+$ pip install -r requirements.txt
+```
+
+To launch the game, simply run `main.py`.
 ```bash
 $ python main.py [-h] [-a] [-l <level>]
 ```
 Include the optional argument `-a` to enable the AI. By default, the game starts at level 0. To change this, include the optional argument `-l <level>` to start at a different level.
 
+| Level    | Frames  |
+| -------- | ------- |
+| 0        | 48      |
+| 1        | 43      |
+| 2        | 38      |
+| 3        | 33      |
+| 4        | 28      |
+| 5        | 23      |
+| 6        | 18      |
+| 7        | 13      |
+| 8        | 8       |
+| 9        | 6       |
+| 10-12    | 5       |
+| 13-15    | 4       |
+| 16-18    | 3       |
+| 19-28    | 2       |
+| 29+      | 1       |
 
 The controls are as follows.
 * `LEFT` - Move the current Tetromino left.
@@ -26,5 +42,10 @@ The controls are as follows.
 * `x` - Rotate the current Tetromino clockwise.
 * `z` - Rotate the current Tetromino counterclockwise.
 * `ENTER` - Pause or restart the game.
+
+To retrain the AI, run `trainer.py`. The weights will be saved to `weights.txt` once training is finished.
+```bash
+$ python trainer.py
+```
 
 <!-- TODO: AI explanation, UML diagram -->

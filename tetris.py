@@ -9,7 +9,7 @@ class Tetris:
     def __init__(self, width, height, level, gravity, seed):
         self.state = 1
         self.randomizer = Randomizer(seed)
-        self.current_tetromino = self.randomizer.get_tetromino()
+        self.curr_tetromino = self.randomizer.get_tetromino()
         self.next_tetromino = self.randomizer.get_tetromino()
         self.grid = Grid(width, height)
         self.score = Score()
@@ -21,26 +21,26 @@ class Tetris:
         self.timer = Timer(60)
 
     def move_left(self):
-        """Move the current tetromino left, if possible."""
-        self.current_tetromino.move(-1, 0)
-        if not self.grid.can_place(self.current_tetromino):
-            self.current_tetromino.move(1, 0)
+        """Move the current Tetromino left, if possible."""
+        self.curr_tetromino.move(-1, 0)
+        if not self.grid.can_place(self.curr_tetromino):
+            self.curr_tetromino.move(1, 0)
 
     def move_right(self):
-        """Move the current tetromino right, if possible."""
-        self.current_tetromino.move(1, 0)
-        if not self.grid.can_place(self.current_tetromino):
-            self.current_tetromino.move(-1, 0)
+        """Move the current Tetromino right, if possible."""
+        self.curr_tetromino.move(1, 0)
+        if not self.grid.can_place(self.curr_tetromino):
+            self.curr_tetromino.move(-1, 0)
 
     def move_down(self):
-        """Move the current tetromino down, if possible."""
-        self.current_tetromino.move(0, 1)
-        if self.grid.can_place(self.current_tetromino):
+        """Move the current Tetromino down, if possible."""
+        self.curr_tetromino.move(0, 1)
+        if self.grid.can_place(self.curr_tetromino):
             if self.is_dropping:
                 self.score.points += 1
         else:
-            self.current_tetromino.move(0, -1)
-            self.grid.place_tetromino(self.current_tetromino)
+            self.curr_tetromino.move(0, -1)
+            self.grid.place_tetromino(self.curr_tetromino)
             self.toggle_drop(False)
             if self.grid.can_clear():
                 self.delay = Timer(20)
@@ -50,7 +50,7 @@ class Tetris:
                 self.state = 3
 
     def toggle_drop(self, is_dropping):
-        """Accelerate the speed of the current tetromino to 0.5G."""
+        """Accelerate the speed of the current Tetromino to 0.5G."""
         if is_dropping and not self.is_dropping:
             self.is_dropping = True
             self.accelerate_tetromino()
@@ -60,26 +60,26 @@ class Tetris:
             self.accelerate_tetromino()
 
     def rotate_clockwise(self):
-        """Rotate the current tetromino clockwise, if possible."""
-        self.current_tetromino.rotate(1)
-        if not self.grid.can_place(self.current_tetromino):
-            self.current_tetromino.rotate(-1)
+        """Rotate the current Tetromino clockwise, if possible."""
+        self.curr_tetromino.rotate(1)
+        if not self.grid.can_place(self.curr_tetromino):
+            self.curr_tetromino.rotate(-1)
 
     def rotate_counterclockwise(self):
-        """Rotate the current tetromino counterclockwise, if possible."""
-        self.current_tetromino.rotate(-1)
-        if not self.grid.can_place(self.current_tetromino):
-            self.current_tetromino.rotate(1)
+        """Rotate the current Tetromino counterclockwise, if possible."""
+        self.curr_tetromino.rotate(-1)
+        if not self.grid.can_place(self.curr_tetromino):
+            self.curr_tetromino.rotate(1)
     
     def reset_tetromino(self):
-        """Replace the current tetromino with another randomly generated tetromino."""
+        """Replace the current Tetromino with another randomly generated Tetromino."""
         self.timer.reset()
-        self.current_tetromino = self.next_tetromino
+        self.curr_tetromino = self.next_tetromino
         self.next_tetromino = self.randomizer.get_tetromino()
-        return self.grid.can_place(self.current_tetromino)
+        return self.grid.can_place(self.curr_tetromino)
 
     def accelerate_tetromino(self):
-        """Accelerate the speed of the current tetromino."""
+        """Accelerate the speed of the current Tetromino."""
         if self.is_dropping:
             self.timer = Timer(min(2, self.timer.rate))
         else:
@@ -121,7 +121,7 @@ class Tetris:
             elif count > 1 and count < self.grid.width + 2:
                 x = count - 2
                 self.grid.clear(x)
-        elif self.state == 3:  # waiting for next tetromino
+        elif self.state == 3:  # waiting for next Tetromino
             if self.delay.tick() == 0:
                 if self.reset_tetromino():
                     self.state = 1

@@ -1,9 +1,7 @@
 import random
-import multiprocessing
 
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-import pygame
 
 from joblib import Parallel, delayed
 
@@ -61,7 +59,7 @@ class Trainer:
         agent = Agent(chromosome.chromosome)
         game = Tetris(WIDTH, HEIGHT, 0, 0, seed)  # simulate a game of Tetris
         while game.state != 0:
-            agent.play(game.current_tetromino, game.grid)(game)
+            agent.play(game.curr_tetromino, game.grid)(game)
             game.update()
         chromosome.fitness = game.score.score
         print(f'Fitness: {chromosome.fitness}')

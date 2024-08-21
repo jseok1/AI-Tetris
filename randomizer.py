@@ -42,13 +42,13 @@ TETROMINOES = [
 class Randomizer:
 
     def __init__(self, seed):
-        self.previous_tetromino = 0
+        self.prev_tetromino = 0
         random.seed(seed)
 
     def get_tetromino(self):
-        """Return a pseudo-random tetromino."""
+        """Return a pseudo-random Tetromino."""
         tetromino = random.randint(1, 8)
-        if tetromino == self.previous_tetromino or tetromino == 8:
+        if tetromino == self.prev_tetromino or tetromino == 8:
             tetromino = random.randint(1, 7)
-        self.previous_tetromino = tetromino
+        self.prev_tetromino = tetromino
         return Tetromino(tetromino, 5, 2, 0, TETROMINOES[tetromino - 1])
