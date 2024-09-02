@@ -1,6 +1,6 @@
 import argparse
 
-from visualizer import Visualizer
+from renderer import Renderer
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -8,4 +8,4 @@ if __name__ == "__main__":
   parser.add_argument("-a", "--agent", action="store_const", const=0, default=1)
   args = parser.parse_args()
 
-  visualizer = Visualizer(args.agent, args.level)
+  renderer = Renderer(args.agent, args.level)

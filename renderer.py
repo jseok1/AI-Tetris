@@ -16,7 +16,7 @@ WHITE = (255, 255, 255)
 LIGHT = (35, 65, 115)
 DARK = (10, 20, 35)
 
-COLOURS = [
+COLORS = [
   (90, 180, 255),
   (45, 120, 255),
   (255, 100, 35),
@@ -31,7 +31,7 @@ FONT = "Arial Narrow"
 WEIGHTS = [0.783709568447, -0.89886513238, -0.288592282201, -0.4428466993816]
 
 
-class Visualizer:
+class Renderer:
   def __init__(self, mode, level):
     pygame.init()
     self.mode = mode
@@ -127,7 +127,8 @@ class Visualizer:
   def draw(self):
     """Draw this game to the screen."""
     self._draw_background()
-    self._draw_tetrominos()
+    self._draw_curr_tetromino()
+    self._draw_next_tetromino()
     self._draw_grid()
     self._draw_text()
     pygame.display.flip()
@@ -139,48 +140,69 @@ class Visualizer:
       (DARK[2] - LIGHT[2]) / DIMENSIONS[1],
     )
     for i in range(DIMENSIONS[1]):
-      colour = (
-        min(max(LIGHT[0] + rate[0] * i, 0), 255),
-        min(max(LIGHT[1] + rate[1] * i, 0), 255),
-        min(max(LIGHT[2] + rate[2] * i, 0), 255),
+      pygame.draw.line(
+        self.screen,
+        (
+          min(max(LIGHT[0] + rate[0] * i, 0), 255),
+          min(max(LIGHT[1] + rate[1] * i, 0), 255),
+          min(max(LIGHT[2] + rate[2] * i, 0), 255),
+        ),
+        (0, i),
+        (DIMENSIONS[0], i),
       )
-      pygame.draw.line(self.screen, colour, (0, i), (DIMENSIONS[0], i))
 
-  def _draw_tetrominos(self):
-    if self.game.state == 1:
-      for x, y in self.game.curr_tetromino.shapes[self.game.curr_tetromino.orientation]:
-        if self.game.curr_tetromino.y + y > 1:
-          coordinates = (
-            (self.game.curr_tetromino.x + x + 1) * UNIT + 1,
-            (self.game.curr_tetromino.y + y - 1) * UNIT,
-          )
-          block = pygame.Rect(coordinates, BLOCK)
-          colour = COLOURS[self.game.curr_tetromino.type - 1]
-          pygame.draw.rect(self.screen, colour, block)
+  def _draw_curr_tetromino(self):
+    if self.game.state != 1:
+      return
+    for x, y in self.game.curr_tetromino.shapes[self.game.curr_tetromino.orientation]:
+      if self.game.curr_tetromino.y + y > 1:
+        pygame.draw.rect(
+          self.screen,
+          COLORS[self.game.curr_tetromino.type - 1],
+          pygame.Rect(
+            (
+              (self.game.curr_tetromino.x + x + 1) * UNIT + 1,
+              (self.game.curr_tetromino.y + y - 1) * UNIT,
+            ),
+            BLOCK,
+          ),
+        )
+
+  def _draw_next_tetromino(self):
     for x, y in self.game.next_tetromino.shapes[self.game.next_tetromino.orientation]:
-      coordinates = ((x + 14) * UNIT, (y + 1) * UNIT)
-      block = pygame.Rect(coordinates, BLOCK)
-      colour = COLOURS[self.game.next_tetromino.type - 1]
-      pygame.draw.rect(self.screen, colour, block)
+      pygame.draw.rect(
+        self.screen,
+        COLORS[self.game.next_tetromino.type - 1],
+        pygame.Rect(((x + 14) * UNIT, (y + 1) * UNIT), BLOCK),
+      )
 
   def _draw_grid(self):
-    pygame.draw.line(self.screen, WHITE, (UNIT, UNIT), (UNIT, UNIT * (HEIGHT + 1)))
-    pygame.draw.line(
-      self.screen,
-      WHITE,
-      (UNIT * (WIDTH + 1) + 1, UNIT),
-      (UNIT * (WIDTH + 1) + 1, UNIT * (HEIGHT + 1)),
-    )
-    pygame.draw.line(
-      self.screen, WHITE, (UNIT, UNIT * (HEIGHT + 1)), (UNIT * (WIDTH + 1) + 1, UNIT * (HEIGHT + 1))
-    )
     for y in range(2, HEIGHT + 2):
       for x in range(WIDTH):
         if self.game.grid.grid[y][x] != 0 and self.game.grid.grid[y][x] != 9:
-          coordinates = ((x + 1) * UNIT + 1, (y - 1) * UNIT)
-          block = pygame.Rect(coordinates, BLOCK)
-          colour = COLOURS[self.game.grid.grid[y][x] - 1]
-          pygame.draw.rect(self.screen, colour, block)
+          pygame.draw.rect(
+            self.screen,
+            COLORS[self.game.grid.grid[y][x] - 1],
+            pygame.Rect(((x + 1) * UNIT + 1, (y - 1) * UNIT), BLOCK),
+          )
+    pygame.draw.line(
+      self.screen,
+      WHITE,
+      (UNIT, UNIT),
+      (UNIT, UNIT * (HEIGHT + 1)),
+    )
+    pygame.draw.line(
+      self.screen,
+      WHITE,
+      (UNIT * (WIDTH + 1) + 2, UNIT),
+      (UNIT * (WIDTH + 1) + 2, UNIT * (HEIGHT + 1)),
+    )
+    pygame.draw.line(
+      self.screen,
+      WHITE,
+      (UNIT, UNIT * (HEIGHT + 1)),
+      (UNIT * (WIDTH + 1) + 2, UNIT * (HEIGHT + 1)),
+    )
 
   def _draw_text(self):
     header = pygame.font.SysFont(FONT, 26)
